@@ -1,16 +1,16 @@
 const MONTHS=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const PALETTE=["#2f80ed","#27ae8f","#f2994a","#eb5757","#9b6dd6","#e0b43a","#56a3c9","#7a8b99"];
 const DEFAULT=()=>seed({
-  acts:[{n:"Développement",c:PALETTE[0]},{n:"Réunions",c:PALETTE[1]},{n:"Formation",c:PALETTE[2]},{n:"Support",c:PALETTE[3]}],
-  v:[[60,20,10,8],[64,24,8,10],[70,22,14,6],[58,18,12,12],[66,26,6,9],[72,20,16,8],[40,12,4,6],[28,8,2,4],[68,24,12,10],[74,28,10,12],[70,22,18,8],[50,16,6,10]]
+  acts:[{n:"Culture",c:PALETTE[1]},{n:"Entretien",c:PALETTE[0]},{n:"Commercialisation",c:PALETTE[2]},{n:"Administratif",c:PALETTE[4]},{n:"Formation",c:PALETTE[5]},{n:"Imprévus",c:PALETTE[3]}],
+  v:[[40,30,10,20,8,4],[44,28,12,18,6,6],[70,34,14,16,4,6],[96,30,18,14,0,8],[120,36,26,12,0,10],[130,40,34,12,0,8],[140,38,40,10,0,12],[124,34,38,10,0,14],[100,30,30,16,6,8],[72,28,24,18,10,6],[52,30,14,22,12,4],[36,24,10,26,10,4]]
 });
 let S=DEFAULT();
 try{const s=localStorage.getItem("heures-v1");if(s){const p=JSON.parse(s);if(p&&p.acts&&p.v&&p.v.length===12)S=p}}catch(e){}
 const save=()=>{try{localStorage.setItem("heures-v1",JSON.stringify(S))}catch(e){}};
 function norm(s){s.sub=s.v.map((r,i)=>s.acts.map((_,j)=>(s.sub&&s.sub[i]&&Array.isArray(s.sub[i][j]))?s.sub[i][j]:[]));return s}
 function seed(s){norm(s);
-  s.sub[0][0]=[{n:"Back-end",v:28},{n:"Front-end",v:20},{n:"Tests",v:12}];
-  s.sub[2][0]=[{n:"Back-end",v:30},{n:"Front-end",v:22},{n:"Tests",v:12},{n:"Revue de code",v:6}];
+  s.sub[0][0]=[{n:"Préparation du sol",v:24},{n:"Semis",v:16}];
+  s.sub[2][0]=[{n:"Semis",v:30},{n:"Plantation",v:24},{n:"Irrigation",v:16}];
   return s}
 norm(S);
 const $=id=>document.getElementById(id);
@@ -179,9 +179,18 @@ function clean(d){
 }
 $("exp").onclick=async()=>{
   const json=JSON.stringify({app:"heures-par-mois",version:1,acts:S.acts,v:S.v,sub:S.sub},null,2);
-  try{const dl=await claude.use("downloads");if(dl){await dl.save({filename:"heures-par-mois.json",data:json});say("Fichier exporté.");return}}catch(e){if(e&&e.code==="declined")return}
-  try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([json],{type:"application/json"}));a.download="heures-par-mois.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);say("Fichier exporté.");return}catch(e){}
-  try{await navigator.clipboard.writeText(json);say("Téléchargement indisponible ici : le JSON a été copié dans le presse-papiers.")}catch(e){say("Export impossible dans cet affichage.")}
+  if(typeof claude!=="undefined"&&claude&&claude.use){
+    try{const dl=await claude.use("downloads");if(dl){await dl.save({filename:"heures-par-mois.json",data:json});say("Fichier exporté.");return}}
+    catch(e){if(e&&e.code==="declined")return}
+  }
+  try{
+    const url=URL.createObjectURL(new Blob([json],{type:"application/json"}));
+    const a=document.createElement("a");a.href=url;a.download="heures-par-mois.json";a.style.display="none";
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},1500);
+    say("Fichier exporté.");return;
+  }catch(e){}
+  try{await navigator.clipboard.writeText(json);say("Téléchargement impossible : le JSON a été copié dans le presse-papiers.")}catch(e){say("Export impossible.")}
 };
 $("imp").onclick=()=>$("file").click();
 $("file").onchange=e=>{
