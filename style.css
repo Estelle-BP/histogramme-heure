@@ -48,7 +48,7 @@ button:hover{border-color:var(--mute)}
 .wrap{overflow-x:auto}
 table{border-collapse:separate;border-spacing:0 5px;width:100%;min-width:560px}
 th{font-weight:500;font-size:13px;padding:0 4px 6px;text-align:center;vertical-align:bottom}
-th.r,td.r{text-align:left;color:var(--mute);font-size:13px;width:90px;padding-right:8px}
+th.r,td.r{text-align:left;color:var(--mute);font-size:13px;width:100px;padding-right:8px}
 .th{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .th .row{display:flex;gap:4px;align-items:center}
 input[type=color]{width:28px;height:28px;border:0;padding:0;background:none;cursor:pointer;border-radius:6px}
@@ -85,3 +85,19 @@ select{flex:1;min-width:0;font:inherit;font-size:13px;color:var(--ink);backgroun
 .sr .pc{width:48px;text-align:right;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums;flex:none}
 .note{color:var(--mute);font-size:12.5px;margin:10px 0 0}
 @media (prefers-reduced-motion:reduce){.anim .bar{animation:none}}
+.mc{display:flex;align-items:center;gap:6px}
+.mn{flex:1;min-width:0}
+input.nw{width:54px;min-width:0;padding:4px 6px;text-align:center}
+.wk{font-size:12px;padding:3px 8px;color:var(--ink)}
+.wl{flex:1;font-size:14px}
+.wn{margin-top:12px}
+.dlg .tools{margin-top:14px}
+.ta{margin-bottom:8px}
+.ts{margin-left:18px}
+.addsub{font-size:12px;padding:3px 8px;flex:none}
+#tpl input[readonly]{background:var(--card);font-weight:600;border-style:dashed}
+.mb{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.apply{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);font-size:14px}
+.apply select{flex:none;width:auto;min-width:130px}
+.apply input{width:70px;min-width:0;flex:none;text-align:center}
+.apply button{margin-left:auto}
