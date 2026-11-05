@@ -2,15 +2,24 @@ const MONTHS=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août"
 const PALETTE=["#2f80ed","#27ae8f","#f2994a","#eb5757","#9b6dd6","#e0b43a","#56a3c9","#7a8b99"];
 const DEFAULT=()=>seed({
   acts:[{n:"Culture",c:PALETTE[1]},{n:"Entretien",c:PALETTE[0]},{n:"Commercialisation",c:PALETTE[2]},{n:"Administratif",c:PALETTE[4]},{n:"Formation",c:PALETTE[5]},{n:"Imprévus",c:PALETTE[3]}],
-  v:[[40,30,10,20,8,4],[44,28,12,18,6,6],[70,34,14,16,4,6],[96,30,18,14,0,8],[120,36,26,12,0,10],[130,40,34,12,0,8],[140,38,40,10,0,12],[124,34,38,10,0,14],[100,30,30,16,6,8],[72,28,24,18,10,6],[52,30,14,22,12,4],[36,24,10,26,10,4]]
+  v:[[40,20,16,24,12,4],[50,20,16,24,10,4],[84,30,24,20,4,6],[140,50,40,16,0,8],[190,80,60,12,0,10],[220,100,80,12,0,10],[258,100,90,10,0,10],[256,90,90,10,0,10],[210,60,70,12,0,8],[134,40,50,16,4,6],[80,24,36,22,10,4],[48,16,30,26,14,4]]
 });
 let S=DEFAULT();
 try{const s=localStorage.getItem("heures-v1");if(s){const p=JSON.parse(s);if(p&&p.acts&&p.v&&p.v.length===12)S=p}}catch(e){}
 const save=()=>{try{localStorage.setItem("heures-v1",JSON.stringify(S))}catch(e){}};
-function norm(s){s.sub=s.v.map((r,i)=>s.acts.map((_,j)=>(s.sub&&s.sub[i]&&Array.isArray(s.sub[i][j]))?s.sub[i][j]:[]));return s}
+function norm(s){s.nw=s.v.map((_,i)=>{const x=s.nw&&s.nw[i],n=Number(x);return x!==null&&x!==""&&x!==undefined&&isFinite(n)&&n>=0?n:4});s.tpl=s.acts.map((_,k)=>{const t=s.tpl&&s.tpl[k]||{};return {w:Math.max(0,Math.round(Number(t.w)||0)),sub:Array.isArray(t.sub)?t.sub.map(x=>({n:String(x&&x.n||"").slice(0,60),v:Math.max(0,Math.round(Number(x&&x.v)||0))})):[]}});s.sub=s.v.map((r,i)=>s.acts.map((_,j)=>(s.sub&&s.sub[i]&&Array.isArray(s.sub[i][j]))?s.sub[i][j]:[]));return s}
 function seed(s){norm(s);
-  s.sub[0][0]=[{n:"Préparation du sol",v:24},{n:"Semis",v:16}];
-  s.sub[2][0]=[{n:"Semis",v:30},{n:"Plantation",v:24},{n:"Irrigation",v:16}];
+  const CU=[["Semis et plants",[10,20,30,30,20,10,8,10,10,4,2,4]],["Plantation",[0,6,24,50,60,40,20,16,20,10,4,0]],["Récolte",[20,16,20,40,70,110,150,150,120,80,50,30]],["Lavage et conditionnement",[10,8,10,20,40,60,80,80,60,40,24,14]]];
+  const CO=[["Marchés",[10,10,14,24,36,48,54,54,42,30,22,20]],["Paniers",[6,6,10,16,24,32,36,36,28,20,14,10]]];
+  s.v.forEach((_,i)=>{
+    s.sub[i][0]=CU.map(([n,h])=>({n,v:h[i]}));
+    s.sub[i][2]=CO.map(([n,h])=>({n,v:h[i]}));
+    s.v[i][0]=s.sub[i][0].reduce((a,x)=>a+x.v,0);
+    s.v[i][2]=s.sub[i][2].reduce((a,x)=>a+x.v,0);
+  });
+  s.tpl[0]={w:0,sub:[{n:"Semis et plants",v:2},{n:"Plantation",v:4},{n:"Récolte",v:14},{n:"Lavage et conditionnement",v:8}]};
+  s.tpl[2]={w:0,sub:[{n:"Marchés",v:8},{n:"Paniers",v:4}]};
+  s.tpl[1].w=12;s.tpl[3].w=2;s.tpl[4].w=0;s.tpl[5].w=1;
   return s}
 norm(S);
 const $=id=>document.getElementById(id);
@@ -77,7 +86,7 @@ $("tbl").addEventListener("change",e=>{
 $("tbl").addEventListener("click",e=>{
   const d=e.target.dataset.d; if(d===undefined) return;
   if(S.acts.length<=1) return;
-  S.acts.splice(+d,1); S.v.forEach(r=>r.splice(+d,1)); S.sub.forEach(r=>r.splice(+d,1));
+  S.acts.splice(+d,1); S.v.forEach(r=>r.splice(+d,1)); S.sub.forEach(r=>r.splice(+d,1)); S.tpl.splice(+d,1);
   if(sel){if(sel.j===+d)sel=null;else if(sel.j>+d)sel.j--}
   save(); renderTable(); renderChart(); renderPanel();
 });
@@ -86,7 +95,7 @@ $("tbl").addEventListener("click",openCell);
 $("tbl").addEventListener("keydown",e=>{if(e.key==="Enter")openCell(e)});
 $("addAct").onclick=()=>{
   S.acts.push({n:"Activité "+(S.acts.length+1),c:PALETTE[S.acts.length%PALETTE.length]});
-  S.v.forEach(r=>r.push(0)); S.sub.forEach(r=>r.push([])); save(); renderTable(); renderChart(); renderPanel();
+  S.v.forEach(r=>r.push(0)); S.sub.forEach(r=>r.push([])); S.tpl.push({w:0,sub:[]}); save(); renderTable(); renderChart(); renderPanel();
 };
 $("reset").onclick=()=>{S=DEFAULT();first=true;sel=null;save();renderTable();renderChart();renderPanel()};
 const tip=$("tip");
@@ -132,6 +141,7 @@ function renderSubs(){
   $("subs").innerHTML=L.map((s,k)=>`<div class="sr"><i style="background:${col[k]}"></i><input type="text" value="${esc(s.n)}" data-sn="${k}" aria-label="Nom"><input type="number" min="0" step="1" inputmode="numeric" value="${s.v}" data-sv="${k}" aria-label="Heures"><span class="pc" data-p="${k}"></span><button class="x" data-sd="${k}" aria-label="Supprimer">✕</button></div>`).join("");
 }
 function renderPanel(){
+  renderTpl();
   $("split").classList.toggle("open",!!sel);$("panel").hidden=!sel;
   if(!sel)return;
   $("selM").innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${i===sel.i?" selected":""}>${m}</option>`).join("");
@@ -175,10 +185,10 @@ function clean(d){
   const acts=d.acts.map((a,j)=>({n:String(a&&a.n||"").slice(0,60),c:hex.test(a&&a.c)?a.c:PALETTE[j%PALETTE.length]}));
   const sub=d.v.map((r,i)=>acts.map((_,j)=>{const L=d.sub&&d.sub[i]&&d.sub[i][j];return Array.isArray(L)?L.map(s=>({n:String(s&&s.n||"").slice(0,60),v:iv(s&&s.v)})):[]}));
   const v=d.v.map((r,i)=>{if(!Array.isArray(r))throw 0;return acts.map((_,j)=>sub[i][j].length?sub[i][j].reduce((a,s)=>a+s.v,0):iv(r[j]))});
-  return {acts,v,sub};
+  return {acts,v,sub,tpl:d.tpl,nw:d.nw};
 }
 $("exp").onclick=async()=>{
-  const json=JSON.stringify({app:"heures-par-mois",version:1,acts:S.acts,v:S.v,sub:S.sub},null,2);
+  const json=JSON.stringify({app:"heures-par-mois",version:1,acts:S.acts,v:S.v,sub:S.sub,tpl:S.tpl,nw:S.nw},null,2);
   if(typeof claude!=="undefined"&&claude&&claude.use){
     try{const dl=await claude.use("downloads");if(dl){await dl.save({filename:"heures-par-mois.json",data:json});say("Fichier exporté.");return}}
     catch(e){if(e&&e.code==="declined")return}
@@ -199,4 +209,77 @@ $("file").onchange=e=>{
   r.onload=()=>{try{S=norm(clean(JSON.parse(r.result)));sel=null;first=true;save();renderTable();renderChart();renderPanel();say("Données importées.")}catch(err){say("Import impossible : fichier JSON non reconnu.")}};
   r.readAsText(f);
 };
+let tplMonth=new Date().getMonth();
+const ival=v=>Math.max(0,Math.round(parseFloat(v)||0));
+const tplTotal=k=>{const t=S.tpl[k];return t.sub.length?t.sub.reduce((a,s)=>a+s.v,0):t.w};
+const tplSum=()=>{$("tplTot").textContent=S.acts.reduce((a,_,k)=>a+tplTotal(k),0)};
+function renderTpl(){
+  $("tpl").innerHTML=S.acts.map((a,k)=>{
+    const t=S.tpl[k],n=t.sub.length,col=shades(a.c,n);
+    return `<div class="ta"><div class="sr"><i style="background:${a.c}"></i><span class="wl">${esc(a.n||"Sans nom")}</span><input type="number" min="0" step="1" inputmode="numeric" value="${tplTotal(k)}" data-tw="${k}" aria-label="${esc(a.n)}, heures par semaine"${n?' readonly title="Somme des sous-activités"':""}><span class="pc">h</span><button class="addsub" data-tadd="${k}">+ Sous-activité</button></div>`
+    +t.sub.map((s,m)=>`<div class="sr ts"><i style="background:${col[m]}"></i><input type="text" value="${esc(s.n)}" data-tj="${k}" data-tk="${m}" data-f="n" aria-label="Nom"><input type="number" min="0" step="1" inputmode="numeric" value="${s.v}" data-tj="${k}" data-tk="${m}" data-f="v" aria-label="Heures par semaine"><span class="pc">h</span><button class="x" data-tdj="${k}" data-tdk="${m}" aria-label="Supprimer">✕</button></div>`).join("")+`</div>`;
+  }).join("");
+  tplSum();
+  if(document.activeElement!==$("tplN"))$("tplN").value=S.nw[tplMonth];
+}
+$("tpl").addEventListener("input",e=>{
+  const t=e.target,d=t.dataset;
+  if(d.tw!==undefined)S.tpl[+d.tw].w=ival(t.value);
+  else if(d.tj!==undefined){
+    const s=S.tpl[+d.tj].sub[+d.tk];
+    if(d.f==="n")s.n=t.value;
+    else{s.v=ival(t.value);const q=document.querySelector('[data-tw="'+d.tj+'"]');if(q)q.value=tplTotal(+d.tj)}
+  }else return;
+  save();tplSum();
+});
+$("tpl").addEventListener("change",e=>{
+  const t=e.target,d=t.dataset;
+  if(d.tw!==undefined)t.value=tplTotal(+d.tw);
+  else if(d.tj!==undefined&&d.f==="v")t.value=S.tpl[+d.tj].sub[+d.tk].v;
+});
+$("tpl").addEventListener("click",e=>{
+  const d=e.target.dataset;
+  if(d.tadd!==undefined){
+    const t=S.tpl[+d.tadd];
+    t.sub.push({n:"Sous-activité "+(t.sub.length+1),v:t.sub.length?0:t.w});
+    save();renderTpl();
+    const f=document.querySelector('[data-tj="'+d.tadd+'"][data-tk="'+(t.sub.length-1)+'"][data-f="n"]');
+    if(f){f.focus();f.select()}
+  }else if(d.tdj!==undefined){
+    const t=S.tpl[+d.tdj],[x]=t.sub.splice(+d.tdk,1);
+    if(!t.sub.length)t.w=x.v;
+    save();renderTpl();
+  }
+});
+function split(subs,month,tot){
+  if(!tot)return subs.map(s=>({n:s.n,v:0}));
+  const raw=subs.map(s=>s.v*month/tot),fl=raw.map(Math.floor);
+  const r=month-fl.reduce((a,b)=>a+b,0);
+  raw.map((x,k)=>[x-fl[k],k]).sort((a,b)=>b[0]-a[0]).slice(0,r).forEach(([,k])=>fl[k]++);
+  return subs.map((s,k)=>({n:s.n,v:fl[k]}));
+}
+function applyTpl(i){
+  S.acts.forEach((_,k)=>{
+    const t=S.tpl[k],tot=tplTotal(k),month=Math.round(tot*S.nw[i]);
+    S.sub[i][k]=t.sub.length?split(t.sub,month,tot):[];
+    S.v[i][k]=month;
+  });
+}
+let snap=null;
+function applyFrom(list,msg){
+  snap=JSON.stringify({v:S.v,sub:S.sub});
+  list.forEach(applyTpl);
+  save();renderTable();renderChart();renderPanel();
+  $("undo").hidden=false;say(msg);
+  clearTimeout(applyFrom.t);applyFrom.t=setTimeout(()=>{$("undo").hidden=true;snap=null},10000);
+}
+$("undo").onclick=()=>{
+  if(!snap)return;
+  const o=JSON.parse(snap);S.v=o.v;S.sub=o.sub;snap=null;$("undo").hidden=true;
+  save();renderTable();renderChart();renderPanel();say("Modification annulée.");
+};
+$("tplM").innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${i===tplMonth?" selected":""}>${m}</option>`).join("");
+$("tplM").onchange=()=>{tplMonth=+$("tplM").value;$("tplN").value=S.nw[tplMonth]};
+$("tplN").addEventListener("input",e=>{const n=parseFloat(e.target.value);S.nw[tplMonth]=n>=0?n:0;save()});
+$("tplApply").onclick=()=>applyFrom([tplMonth],`${MONTHS[tplMonth]} rempli avec la semaine type (${S.nw[tplMonth]} sem.).`);
 renderTable();renderChart();renderPanel();
